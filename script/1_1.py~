@@ -1,0 +1,68 @@
+import sys
+
+WHITE_U = -0.04
+WALL_U = 0
+
+def get_bellman(board, u_board, i, j):
+    #Utility of the four directions
+    u_e = None
+    u_w = None
+    u_s = None
+    u_n = None
+    if i > 0:
+        if board[i - 1][j] != WALL_U:
+            u_n = board[i - 1][j]
+        else:
+            u_n = board[i][j]
+    if i < len(board - 1):
+        if board[i + 1][j] != WALL_U:
+            u_s = board[i + 1][j]
+        else:
+            u_s = board[i][j]
+    if j > 0:
+        if board[i][j - 1] != WALL_U:
+            u_w = board[i][j - 1]
+        else:
+            u_w = board[i][j]
+    if j < len(board[0] - 1):
+        if board[i][j + 1] != WALL_U:
+            u_e = board[i][
+                
+
+def get_initial_utility(board):
+    u_board = [[0 for x in range(len(board[0]))] for x in range(len(board))]
+    for i in range(len(board)):
+        for j in range(len(board[0])):
+            if board[i][j] != WHITE_U:
+                u_board[i][j] = board[i][j]
+    return u_board
+
+def cal_MDP(board, terminal):
+    u_board = get_initial_utility(board)
+    #Treat rewards as terminal states
+    if terminal != None:
+        
+
+def build_board():
+    return [[WHITE_U, -1, WHITE_U, WHITE_U, WHITE_U, WHITE_U],
+            [WHITE_U, WHITE_U, WHITE_U, WALL_U, -1, WHITE_U],
+            [WHITE_U, WHITE_U, WHITE_U, WALL_U, WHITE_U, 3],
+            [WHITE_U, WHITE_U, WHITE_U, WALL_U, WHITE_U, WHITE_U],
+            [WHITE_U, WHITE_U, WHITE_U, WHITE_U, WHITE_U, WHITE_U],
+            [1, -1, WHITE_U, WALL_U, -1, -1]]
+
+def print_matrix(matrix):
+    for row in matrix:
+        row_str = ""
+        for cell in matrix[row]:
+            row += cell + " & "
+            row_str = row_str[:-3] + "\\\\"
+        print(row_str)
+
+if __name__ == "__main__":
+    board = build_board()
+    u_matrix = cal_MDP(board, 1)
+    print_matrix(u_matrix)
+    u_matrix = cal_MDP(board, None)
+    print_matrix(u_matrix)
+    
