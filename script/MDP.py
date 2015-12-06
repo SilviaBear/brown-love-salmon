@@ -2,7 +2,7 @@ import sys
 
 WHITE_U = -0.04
 WALL_U = 0
-DISCOUNT_RATE = 0.99
+DISCOUNT_RATE = 0.7
 
 def get_bellman(board, u_board, i, j):
     #Utility of the four directions
@@ -14,21 +14,17 @@ def get_bellman(board, u_board, i, j):
     if j > 0:
         if board[i][j - 1] != WALL_U:
             actions[1] = u_board[i][j - 1]
-    if i < len(board[0]) - 1:
+    if i < len(board) - 1:
         if board[i + 1][j] != WALL_U:
             actions[2] = u_board[i + 1][j]
     if j < len(board[0]) - 1:
         if board[i][j + 1] != WALL_U:
             actions[3] = u_board[i][j + 1]
 
-    max_u = max(actions)
-    op_action = -1
+    utilities = []
     for i in range(4):
-        if actions[i] == max_u:
-            op_action = i
-            break
-    expected_u = 0.8 * max_u + 0.1 * actions[(op_action + 1) % 4] + 0.1 * actions[(op_action + 3) % 4]
-    return board[i][j] + DISCOUNT_RATE * expected_u 
+        utilities.append(0.8 * actions[i] + 0.1 * actions[(i + 1) % 4] + 0.1 * actions[(i + 3) % 4])
+    return board[i][j] + DISCOUNT_RATE * max(utilities)
 
 def get_initial_utility(board):
     u_board = [[0.0 for x in range(len(board[0]))] for x in range(len(board))]
@@ -45,21 +41,23 @@ def cal_MDP(board, terminal):
     u_board, white_spaces = get_initial_utility(board)
     converged = 0
     #Treat rewards as terminal states
-    while converged < white_spaces:
+    for iteration in range(50):
         for i in range(len(board)):
             for j in range(len(board[0])):
                 #print(u_board[i][j])
                 if terminal:
-                    if board[i][j] != WHITE_U and board[i][j] != WALL_U:
+                    if board[i][j] != WHITE_U:
                         continue
-                if board[i][j] == WHITE_U:
+                if board[i][j] != WALL_U:
                     bellman_u = get_bellman(board, u_board, i, j)
                     #print("bellman " + str(bellman_u))
-                    print(u_board[i][j] - bellman_u)
+                    #print(u_board[i][j] - bellman_u)
+                    '''
                     if round(u_board[i][j], 2) == round(bellman_u, 2):
                         converged += 1
                     else:
-                        u_board[i][j] = bellman_u
+                    '''
+                    u_board[i][j] = bellman_u
         #print_matrix(u_board)
         #print(u_board)
     return u_board
@@ -81,9 +79,14 @@ def print_matrix(matrix):
         print(row_str)
 
 if __name__ == "__main__":
+    #Part 1.1
+    '''
     board = build_board()
     u_matrix = cal_MDP(board, True)
     print_matrix(u_matrix)
-    #u_matrix = cal_MDP(board, False)
-    #print_matrix(u_matrix)
+    u_matrix = cal_MDP(board, False)
+    print_matrix(u_matrix)
+    '''
+    #Part 1.2
+    blackbox_utility = build_board()
     
