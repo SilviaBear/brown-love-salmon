@@ -2,6 +2,11 @@
 
 import math
 import sys
+import copy
+
+import matplotlib.pyplot as plt
+
+import random
 
 #For digit classification
 TRAINING_IMAGES = "../data/trainingimages"
@@ -17,10 +22,8 @@ VECTOR_LENGTH = IMAGE_PIXEL_HEIGHT * IMAGE_PIXEL_WIDTH
 
 bias = 1
 
-num_epochs = 10
-
 def decay_func(epoch):
-    return 1000.0 / (1000 + epoch)
+    return 1.5 / (1.5 + epoch)
 
 def initiate_bias():
     return [bias for x in range(10)]
@@ -41,15 +44,7 @@ def build_image_vector(image_fil):
                 pixel_vector.append(1)
 
     return pixel_vector
-
-def sgn(x):
-    if x > 0:
-        return 1
-    if x < 0:
-        return -1
-    else:
-        return 0
-
+    
 def add_vector(v1, v2):
     _v = [(v1[x] + v2[x]) for x in range(len(v1))]
     return _v
@@ -63,7 +58,7 @@ def multiply_vector(v1, v2):
 
 def multiply_vector_by_constant(v, b):
     for x in range(len(v)):
-        v[x] *= b
+        v[x] *= b * 1.0
     return v
 
 def predict_class(weights, pixel_vector, bias):
@@ -71,7 +66,7 @@ def predict_class(weights, pixel_vector, bias):
     max_val = -sys.maxsize
     for x in range(10):
         if bias != None:
-            _val = multiply_vector(weights[x], pixel_vector), bias[x]
+            _val = multiply_vector(weights[x], pixel_vector)
         else:
             _val = multiply_vector(weights[x], pixel_vector)
             
@@ -81,26 +76,45 @@ def predict_class(weights, pixel_vector, bias):
 
     return predicted_class
 
-def train():
+def build_examples():
+
+    samples = []
+    with open(TRAINING_IMAGES) as image_fil:
+        with open(TRAINING_LABELS) as label_fil:
+            while True:
+                label = label_fil.readline().strip("\n")
+                if len(label) == 0:
+                    break
+                pixel_vector = build_image_vector(image_fil)
+                samples.append((int(label), pixel_vector))
+
+    return samples
+                
+def train(num_epochs, samples):
     weights = initiate_weights()
     bias = initiate_bias()
+    all_weights = []
+    data = []
     for time in range(num_epochs):
-        with open(TRAINING_IMAGES) as image_fil:
-            with open(TRAINING_LABELS) as label_fil:
-                while True:
-                    label = label_fil.readline().strip("\n")
-                    if len(label) == 0:
-                        break
+        order = [x for x in range(len(samples))]
+        random.shuffle(order)
+        for index in order:
+            expected_class = samples[index][0]
+            pixel_vector = samples[index][1]
+            predicted_class = predict_class(weights, pixel_vector, bias)
+            if expected_class != predicted_class:
+                weights[expected_class] = add_vector(weights[expected_class], multiply_vector_by_constant(pixel_vector, decay_func(time)))
+                weights[predicted_class] = add_vector(weights[predicted_class], multiply_vector_by_constant(pixel_vector, -decay_func(time)))
 
-                    expected_class = int(label)
-                    pixel_vector = build_image_vector(image_fil)
-                    predicted_class = predict_class(weights, pixel_vector, bias)
-                    
-                    if expected_class != predicted_class:
-                        weights[expected_class] = add_vector(weights[expected_class], multiply_vector_by_constant(pixel_vector, decay_func(time)))
-                        weights[predicted_class] = add_vector(weights[expected_class], multiply_vector_by_constant(pixel_vector, -decay_func(time)))
-
-    return weights
+        #print(weights)
+        #all_weights.append(copy.deepcopy(weights))
+        confusion_matrix, accuracy = test(weights)
+        print(accuracy)
+        data.append(accuracy)
+        print_matrix(confusion_matrix)
+    plt.plot(data)
+    plt.show()
+    return all_weights
 
 def test(weights):
     confusion_matrix = [[0 for x in range(10)] for x in range(10)]
@@ -155,7 +169,11 @@ def parse_matrix_to_string(matrix):
     return _str
 
 if __name__ == "__main__":
-    weights = train()
-    confusion_matrix, accuracy = test(weights)
-    print_matrix(confusion_matrix)
-    print(accuracy)
+
+    samples = build_examples()
+    all_weights = train(15, samples)
+    for weights in all_weights:
+        pass
+        #confusion_matrix, accuracy = test(weights)
+        #print_matrix(confusion_matrix)
+        #print(accuracy)

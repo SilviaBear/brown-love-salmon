@@ -1,8 +1,9 @@
 import sys
+import matplotlib.pyplot as plt
 
 WHITE_U = -0.04
 WALL_U = 0
-DISCOUNT_RATE = 0.7
+DISCOUNT_RATE = 0.99
 
 def get_bellman(board, u_board, i, j):
     #Utility of the four directions
@@ -40,6 +41,7 @@ def get_initial_utility(board):
 def cal_MDP(board, terminal):
     u_board, white_spaces = get_initial_utility(board)
     converged = 0
+    utility_estimates = [[0 for x in range(50)] for x in range(36)]
     #Treat rewards as terminal states
     for iteration in range(50):
         for i in range(len(board)):
@@ -58,9 +60,11 @@ def cal_MDP(board, terminal):
                     else:
                     '''
                     u_board[i][j] = bellman_u
+
+                utility_estimates[i * 6 + j][iteration] = bellman_u
         #print_matrix(u_board)
         #print(u_board)
-    return u_board
+    return u_board, utility_estimates
 
 def build_board():
     return [[WHITE_U, -1, WHITE_U, WHITE_U, WHITE_U, WHITE_U],
@@ -80,13 +84,15 @@ def print_matrix(matrix):
 
 if __name__ == "__main__":
     #Part 1.1
-    '''
+                                                    
     board = build_board()
-    u_matrix = cal_MDP(board, True)
+    u_matrix, utility_estimates = cal_MDP(board, True)
+    u_matrix, utility_estimates = cal_MDP(board, False)
     print_matrix(u_matrix)
-    u_matrix = cal_MDP(board, False)
-    print_matrix(u_matrix)
-    '''
+    for cell in utility_estimates:
+        plt.plot(cell)
+    plt.show()
+        
     #Part 1.2
     blackbox_utility = build_board()
     
